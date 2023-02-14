@@ -1,33 +1,35 @@
-const express = require('express');
-const cors = require('cors');
-const webRoute = require('./routes/web');
-const MongoClient = require('mongodb').MongoClient;
-const mongoose = require('mongoose');
-
+const express = require("express");
+const mongoose = require("mongoose");
+const routes = require("./routes");
 const app = express();
+const PORT = process.env.PORT || 3001;
 
-var port = process.env.PORT || 5000;
 
-require('dotenv').config();
-
-app.use(cors());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-mongoose.connect(process.env.ATLAS_URI, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true }).then(()=>console.log('MongoDb connected')).catch(err => console.log(err));
- 
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static("client/build"));
+}
 
-app.use(function (req, res, next) {
-    res.locals.baseHost = req.protocol + '://' + req.hostname;
-    res.locals.Request = {
-        query: req.query,
-        params: req.params
-    };
-    console.log((new Date).toLocaleString() + ' - ', req.method + ': ' + res.locals.baseHost + req.url)
-    next();
+app.use(routes);
+
+// Connect to the Mongo DB
+mongoose.connect(process.env.MONGODB_URI || "mongodb+srv://suryansh2010990712:2010990712@cluster1.a93z2le.mongodb.net/realestate?retryWrites=true&w=majority", {
+  useNewUrlParser: true,
+  useFindAndModify: false,
+  useUnifiedTopology: true
 });
 
-app.use('/', webRoute);
-
-app.listen(port, function () {
-    console.log("Server started on port " + port);
-})
+// mongoose.connect(
+//   process.env.MONGODB_URI ||
+//   "mongodb+srv://azucena_1:wc5vclNd7KxqpytQ@cluster-p7dpjvmj.6prcb.mongodb.net/heroku_p7dpjvmj?retryWrites=true&w=majority", {
+//     useNewUrlParser: true,
+//     useFindAndModify: false,
+//     useUnifiedTopology: true
+//   });
+  
+// Start the API server
+app.listen(PORT, function() {
+  console.log('=> API Server now listening on PORT ${PORT}!');
+});
